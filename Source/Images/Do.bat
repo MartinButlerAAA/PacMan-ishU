@@ -8,9 +8,10 @@ rem This tool can only handle .bmp images. Any other images need to be converted
 rem be done using Microsoft Paint.
 rem 
 cd .
-processBmp AlienA.bmp
-processBmp AlienB.bmp
-processBmp AlienC.bmp
+processBmp GhostR.bmp
+processBmp GhostL.bmp
+processBmp GhostU.bmp
+processBmp GhostD.bmp
 processBmp PacManA.bmp
 processBmp PacManB.bmp
 processBmp PacManC.bmp

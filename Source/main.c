@@ -44,12 +44,14 @@ void displayGamepad()
 	sprintf(slevel, "Level: % 6i ", getScreen());
 
 	// Display information about the game on the game pad screen.
-	OSScreenPutFontEx(SCREEN_DRC, 3, 1, "PACMAN-ish");
-	OSScreenPutFontEx(SCREEN_DRC, 3, 3, "A game based on the legendary PacMan.");
-	OSScreenPutFontEx(SCREEN_DRC, 3, 5, "Use the left joycon or direction buttons to move PacMan.");
-	OSScreenPutFontEx(SCREEN_DRC, 3, 6, "Press ZL to start the game.");
-	OSScreenPutFontEx(SCREEN_DRC, 3, 8, sscore);
-	OSScreenPutFontEx(SCREEN_DRC, 3, 9, slevel);
+	OSScreenPutFontEx(SCREEN_DRC, 3,  1, "PACMAN-ish");
+	OSScreenPutFontEx(SCREEN_DRC, 3,  3, "A game based on the legendary PacMan.");
+	OSScreenPutFontEx(SCREEN_DRC, 3,  5, "Use the left joycon or direction buttons to move PacMan.");
+	OSScreenPutFontEx(SCREEN_DRC, 3,  6, "Collect the dots to score.");
+	OSScreenPutFontEx(SCREEN_DRC, 3,  7, "The red and white balls send the baddies back to their pen.");
+	OSScreenPutFontEx(SCREEN_DRC, 3,  9, "Press ZL to start the game.");
+	OSScreenPutFontEx(SCREEN_DRC, 3, 12, sscore);
+	OSScreenPutFontEx(SCREEN_DRC, 3, 13, slevel);
 
 	// Flip buffers to display the updates.
 	OSScreenFlipBuffersEx(SCREEN_DRC);
@@ -59,13 +61,12 @@ void displayGamepad()
 // Display the game on the TV screen. A count of 0-3 is passed in to aid movement animation.
 void displayScreen(int fineMove)
 {
-	static unsigned int mationC = 0; // Used for character animation.
-
 	int xmove;	// Used for movement animation.
 	int ymove;
 
 	// Game objects to get the current positions from the Game.
 	gameObject_t pacman;
+	// The initial version of the game had aliens for baddies (hence the name), these are now ghosts as per PacMan.
 	gameObject_t alien;
 
 	// Clear the TV to have a black background.
@@ -88,11 +89,12 @@ void displayScreen(int fineMove)
 	// The fine movement uses the fineMove value passed in to move the player in 1/4 block steps.
 	xmove = ((int)pacman.x - (int)pacman.xold) * fineMove * SQX/4;
 	ymove = ((int)pacman.y - (int)pacman.yold) * fineMove * SQY/4;
-	// The animation count is used to select the image to animate mouth movement.
+	// The fineMove count is used to select the image to animate mouth movement.
 	// The direction is pased in to the draw function so that PacMan faces the way he is moving.
-	if      (mationC == 0) { drawImage(PacManAImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
-	else if (mationC == 1) { drawImage(PacManBImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
-	else if (mationC == 2) { drawImage(PacManCImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
+	if      (fineMove == 0) { drawImage(PacManCImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
+	else if (fineMove == 1) { drawImage(PacManBImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
+	else if (fineMove == 2) { drawImage(PacManAImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
+	else if (fineMove == 3) { drawImage(PacManBImage, XOFFSET + (pacman.xold * SQX) + xmove, YOFFSET + (pacman.yold * SQY) + ymove, pacman.direction); }
 
 	// Put the aliens on the screen taking into account the board offset and size of blocks.
 	for (unsigned int z = 0; z < getNumberAliens(); z++)
@@ -101,20 +103,17 @@ void displayScreen(int fineMove)
 		// The fine movement uses the fineMove value passed in to move the aliens in 1/4 block steps.
 		xmove = ((int)alien.x - (int)alien.xold) * fineMove * SQX / 4;
 		ymove = ((int)alien.y - (int)alien.yold) * fineMove * SQY / 4;
-		// The animation count is used to select the image to animate the aliens.
-		// The direction set to 0 for default as the aliens don't need to change the way they face.
-		if      (mationC == 0) { drawImage(AlienAImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
-		else if (mationC == 1) { drawImage(AlienBImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
-		else if (mationC == 2) { drawImage(AlienCImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
+		// The direction passed in is set to 0 as the ghosts don't rotate like PacMan.
+		// alien.direction is used to pick the image so that the eyes are pointing in the correct direction.
+		// 
+		if      (alien.direction == UP)    { drawImage(GhostUImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
+		else if (alien.direction == DOWN)  { drawImage(GhostDImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
+		else if (alien.direction == RIGHT) { drawImage(GhostRImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
+		else if (alien.direction == LEFT)  { drawImage(GhostLImage, XOFFSET + (alien.xold * SQX) + xmove, YOFFSET + (alien.yold * SQY) + ymove, 0); }
 	}
 
 	// Flip the screen buffer to show the new display.
     OSScreenFlipBuffersEx(SCREEN_TV);
-
-	// Animation count to continually count 0, 1, 2.
-	mationC++;
-	if (mationC >= 3) { mationC = 0; }
-
 	return;
 }
 
@@ -178,52 +177,49 @@ int main(int argc, char** argv)
 	WHBProcInit();
 	WHBLogConsoleInit();	// Console Init gets the display to operate correctly so keep in the build.
 
-	// Call separate function from sound.h to do all of the sound setup.
-	setupSound();
+	setupSound();			// Call separate function from sound.h to do all of the sound setup.
 
-	gameEnded();	// Put something onto the main TV screen at the start.
+	newScreen();			// Set up the screen and game the first time for the game to be displayed while waiting to start.
+	newGame();
 
 	// There must be a main loop on WHBProc running, for the program to correctly operate with the home button.
 	// Home pauses this loop and continues if resume is selected. There must therefore be one main loop of processing in the main program.
 	while (WHBProcIsRunning())
 	{
-		if (gameState == 0) // waiting;
+		if (gameState == 0)			// waiting;
 		{
-			// Get the VPAD button last pressed.
-			VPADRead(VPAD_CHAN_0, &status, 1, NULL);
+			VPADRead(VPAD_CHAN_0, &status, 1, NULL);					// Get the VPAD button last pressed.
 			if  (status.trigger & VPAD_BUTTON_ZL) { gameState = 1; }	// change to starting.
-			moveDelay();		// Add some delay to give time back to the OS.
-			displayGamepad();	// Show game instructions on the game-pad.
+			displayGamepad();											// Show game instructions on the game-pad.
+			displayScreen(0);											// Show game screen while waiting.
+			moveDelay();
 		}
-		else if (gameState == 1) // starting
-		{
-			// Set ready for a new game.
-			newScreen();		// Set up the screen.
-			newGame();			// New game done after newScreen, as newScreen increments scores for normal gameplay.
-			gameState = 2;		// set to running.
-			playerMove = UP;	// Set the move to be upwards so that PacMan does not move once new screen starts.
+		else if (gameState == 1)	// starting
+		{							// Set ready for a new game.
+			newScreen();			// Set up the screen.
+			newGame();				// New game done after newScreen, as newScreen increments aliens.
+			gameState = 2;			// set to running.
+			playerMove = UP;		// Set the move to be upwards so that PacMan does not move once new screen starts.
 		}
-		else if (gameState == 2) // running
+		else if (gameState == 2)	// running
 		{
-			putMove(playerMove);
+			putMove(playerMove);	// Pass the player move (aquired during animiation) into the game.
 
-			// If move aliens shows that pacman has been caught, break the loop to end the game.
-			if (moveAliens() == true)
+			if (moveAliens() == true)	// If move aliens shows that pacman has been caught, break the loop to end the game.
 			{
-				gameState = 3;	// ending
+				gameState = 3;			// set to ending
 			}
-			// If all dots eaten, go up to the next level.
-			if (screenEnd() == true)
+			if (screenEnd() == true)	// If all dots eaten, go up to the next level.
 			{
 				doNewScreen = true;
 			}
-
-			displayGamepad();	// Update scores on game pad.
+			displayGamepad();	// Update scores on game-pad.
 
 			// Display is done 4 times to support animation.
 			// The Vpad input is obtained each time to support faster response to the controls.
+			// The number passed in to displayScreen is used to support finer movement animation.
 			displayScreen(0);
-			moveDelay();
+			moveDelay();		// Give time back to the OS (delay reduces to make game go faster).
 			getVpad();
 
 			displayScreen(1);
@@ -241,7 +237,7 @@ int main(int argc, char** argv)
 			// Do the new screen after PacMan has moved, so the player sees the last point eaten.
 			if (doNewScreen == true)
 			{
-				putsoundSel(LEVEL);		// Play the level up sound.
+				putsoundSel(LEVEL);								// Play the level-up sound.
 				OSSleepTicks(OSMillisecondsToTicks(1000));		// Allow time to see the board at end of the screen.
 				newScreen();
 				playerMove = UP;		// Set the move to be upwards, so that PacMan does not move once new screen starts.
@@ -250,11 +246,13 @@ int main(int argc, char** argv)
 		}
 		else if (gameState == 3)	// ending
 		{
-			displayGamepad();		// Show instructions and scores on game pad.
-			putsoundSel(ENDGAME);	// Play the end of game sound.
-			OSSleepTicks(OSMillisecondsToTicks(1000));		// Allow time to see the board at end of the game.
+			displayGamepad();							// Show instructions and scores on game-pad.
+			putsoundSel(ENDGAME);						// Play the end of game sound.
+			OSSleepTicks(OSMillisecondsToTicks(1000));	// Allow time to see the board at end of the game.
 			gameEnded();
-			gameState = 0;			// Back to waiting.
+			OSSleepTicks(OSMillisecondsToTicks(2000));	// Allow time to see end screen.
+			newScreen();								// Set up the screen to be displayed while waiting to start.
+			gameState = 0;								// Back to waiting.
 		}
 	}
 

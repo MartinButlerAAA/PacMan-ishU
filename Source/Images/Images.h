@@ -1,7 +1,8 @@
 // Images for PacMan-ish
-#include "Images/AlienA.bmp.h"
-#include "Images/AlienB.bmp.h"
-#include "Images/AlienC.bmp.h"
+#include "Images/GhostU.bmp.h"
+#include "Images/GhostD.bmp.h"
+#include "Images/GhostL.bmp.h"
+#include "Images/GhostR.bmp.h"
 #include "Images/PacManA.bmp.h"
 #include "Images/PacManB.bmp.h"
 #include "Images/PacManC.bmp.h"

@@ -122,7 +122,9 @@ static void movePlayer()
 bool moveAliens()
 {
 	unsigned int z;		// Working index.
+	unsigned int rnd;	// Random number for direction.
 	bool gend = false;	// Return flag.
+	bool newDirection = false;
 
 	// Move all of the aliens being used for this game level.
 	for (z = 0; z < Naliens; z++)
@@ -135,71 +137,75 @@ bool moveAliens()
 		// If the alien can no longer move due to a block, its direction is cancelled.
 		if (aliens[z].direction == UP)
 		{
-			if (store[aliens[z].y - 1][aliens[z].x] != BLOCK)
-			{
-				aliens[z].y--;
-			}
-			else
-			{
-				aliens[z].direction = 0;
-			}
+			if (store[aliens[z].y - 1][aliens[z].x] != BLOCK) { aliens[z].y--; }
+			else { newDirection = true; }	// If hit a wall do the logic to change direction.
 		}
-
 		if (aliens[z].direction == DOWN)
 		{
-			if (store[aliens[z].y + 1][aliens[z].x] != BLOCK)
-			{
-				aliens[z].y++;
-			}
-			else
-			{
-				aliens[z].direction = 0;
-			}
+			if (store[aliens[z].y + 1][aliens[z].x] != BLOCK) { aliens[z].y++; }
+			else { newDirection = true; }	// If hit a wall do the logic to change direction.
 		}
 		if (aliens[z].direction == LEFT)
 		{
 			if (store[aliens[z].y][aliens[z].x - 1] != BLOCK)
 			{
-				// This is additional logic to use available up directions.
-				// This is necessary so that aliens can go into some side paths.
-				if ((store[aliens[z].y - 1][aliens[z].x] != BLOCK) && (rand()%6 > 4))
-				{
-					aliens[z].direction = UP;
-				}
-				else
-				{
-					aliens[z].x--;
-				}
+				// If a side entrance is available and PacMan is in that direction consider a direction change.
+				if      ((aliens[z].y > pacMan.y) && (store[aliens[z].y - 1][aliens[z].x] != BLOCK)) { newDirection = true; }
+				else if ((aliens[z].y < pacMan.y) && (store[aliens[z].y + 1][aliens[z].x] != BLOCK)) { newDirection = true; }
+				else { aliens[z].x--; }
 			}
 			else
 			{
-				aliens[z].direction = 0;
+				newDirection = true;	// If hit a wall do the logic to change direction.
 			}
 		}
 		if (aliens[z].direction == RIGHT)
 		{
 			if (store[aliens[z].y][aliens[z].x + 1] != BLOCK)
 			{
-				// This is additional logic to use available down directions.
-				if ((store[aliens[z].y + 1][aliens[z].x] != BLOCK) && (rand() % 6 > 4))
-				{
-					aliens[z].direction = DOWN;
-				}
-				else
-				{
-					aliens[z].x++;
-				}
+				// If a side entrance is available and PacMan is in that direction consider a direction change.
+				if      ((aliens[z].y > pacMan.y) && (store[aliens[z].y - 1][aliens[z].x] != BLOCK)) { newDirection = true; }
+				else if ((aliens[z].y < pacMan.y) && (store[aliens[z].y + 1][aliens[z].x] != BLOCK)) { newDirection = true; }
+				else { aliens[z].x++; }
 			}
 			else
 			{
-				aliens[z].direction = 0;
+				newDirection = true;	// If hit a wall do the logic to change direction.
 			}
 		}
 
-		// If the alien is stopped (i.e. it has hit a wall, pick a new random direction).
-		if (aliens[z].direction == 0)
+		if (newDirection == true)		// Do the new direction processing if commanded.
 		{
-			aliens[z].direction = rand() % 4 + 1;
+			if      (screen == 2) { rnd = rand() % 6; }		// Make screen 2 more random.
+			else if (screen == 3) { rnd = rand() % 5; }		// Make screen 3 a bit less random.
+			else { rnd = rand() % 4; }						// For the first screen and 3 onwards the random number is 1 in 4.
+			// There is only one alien for the first screen so does not need to be made easier.
+
+			if ((rnd == 1) || (rnd == 2)) // One in two times pick a random direction to avoid getting stuck.
+			{
+				aliens[z].direction = rand() % 4 + 1;	// Pick a random direction.
+			}
+			else if (rnd == 3)			// One in four times pick a direction based on PacMan position.
+			{
+				// If the alien is further from PacMan on the x axis, try left or right first.
+				if (abs(pacMan.x - aliens[z].x) > abs(pacMan.y - aliens[z].y))
+				{
+					if      ((aliens[z].x > pacMan.x) && (store[aliens[z].y][aliens[z].x - 1] != BLOCK)) { aliens[z].direction = LEFT; }
+					else if ((aliens[z].x < pacMan.x) && (store[aliens[z].y][aliens[z].x + 1] != BLOCK)) { aliens[z].direction = RIGHT; }
+					else if ((aliens[z].y > pacMan.y) && (store[aliens[z].y - 1][aliens[z].x] != BLOCK)) { aliens[z].direction = UP; }
+					else if ((aliens[z].y < pacMan.y) && (store[aliens[z].y + 1][aliens[z].x] != BLOCK)) { aliens[z].direction = DOWN; }
+				}
+				else
+					// Otherwise try up or down first.
+				{
+					if      ((aliens[z].y > pacMan.y) && (store[aliens[z].y - 1][aliens[z].x] != BLOCK)) { aliens[z].direction = UP; }
+					else if ((aliens[z].y < pacMan.y) && (store[aliens[z].y + 1][aliens[z].x] != BLOCK)) { aliens[z].direction = DOWN; }
+					else if ((aliens[z].x > pacMan.x) && (store[aliens[z].y][aliens[z].x - 1] != BLOCK)) { aliens[z].direction = LEFT; }
+					else if ((aliens[z].x < pacMan.x) && (store[aliens[z].y][aliens[z].x + 1] != BLOCK)) { aliens[z].direction = RIGHT; }
+				}
+			}
+			// One in four times the direction will be left unchanged.
+			newDirection = false;	// Only do the logic when commanded.
 		}
 
 		// If an alien has run into PacMan, then the game is over so return true.
@@ -252,19 +258,15 @@ bool putMove(unsigned int m)
 // Set the screen back to the start ready for another level.
 void newScreen()
 {
-	screen++;				// Game level is increased.
-	score = score + 1000;	// Add to the score.
-	Naliens++;				// Add an alien to make it harder.
-
 	// Put PacMan back to the starting position.
 	pacMan.x = 2;
 	pacMan.y = 1;
-	pacMan.direction = UP;		// PacMan to not move at start of game unless controlled by player.
+	pacMan.direction = UP;	// PacMan to not move at start of game unless controlled by player.
 	pacMan.xold = 2;
 	pacMan.yold = 1;
 
-	// Put aliens back into their starting pen.
-	aliensBack();
+	Naliens++;				// Add an alien to make it harder.
+	aliensBack();			// Put aliens back into their starting pen.
 
 	// Copy the starting screen back into the working copy of the game board.
 	for (int y = 0; y < MAXY; y++)
@@ -275,8 +277,7 @@ void newScreen()
 		}
 	}
 
-	// Put PacMan back on the game board.
-	store[pacMan.y][pacMan.x] = PACMN;
+	store[pacMan.y][pacMan.x] = PACMN;	// Put PacMan back on the game board.
 }
 
 // Check to see if all of the dots have been eaten, if so it is the end of the screen.
@@ -298,6 +299,9 @@ bool screenEnd()
 	// If there are no dots left then return true that the screen has ended.
 	if (z == 0)
 	{
+		// Update the scores etc for the end of screen.
+		screen++;				// Game level is increased.
+		score = score + 1000;	// Add to the score.
 		return true;
 	}
 	else
@@ -311,7 +315,7 @@ extern void newGame()
 {
 	score = 0;
 	screen = 1;
-	Naliens = 3;
+	Naliens = 1;
 }
 
 
