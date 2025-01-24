@@ -176,10 +176,9 @@ bool moveAliens()
 
 		if (newDirection == true)		// Do the new direction processing if commanded.
 		{
-			if      (screen == 2) { rnd = rand() % 6; }		// Make screen 2 more random.
-			else if (screen == 3) { rnd = rand() % 5; }		// Make screen 3 a bit less random.
-			else { rnd = rand() % 4; }						// For the first screen and 3 onwards the random number is 1 in 4.
-			// There is only one alien for the first screen so does not need to be made easier.
+			// Make the aliens a bit slower to respond as more are added.
+			// Increasing the number of aliens makes the game more difficult, it is only playable if they are slow to react.
+			rnd = rand() % (3 + (Naliens * 2));
 
 			if ((rnd == 1) || (rnd == 2)) // One in two times pick a random direction to avoid getting stuck.
 			{
