@@ -126,10 +126,10 @@ void getVpad()
 	// Get the VPAD button last pressed.
 	VPADRead(VPAD_CHAN_0, &status, 1, NULL);
 
-	if ((status.trigger & VPAD_BUTTON_UP)   || (status.trigger & VPAD_STICK_L_EMULATION_UP))	{ playerMove = UP; }	// Player moves.
-	if ((status.trigger & VPAD_BUTTON_LEFT) || (status.trigger & VPAD_STICK_L_EMULATION_LEFT))	{ playerMove = LEFT; }
-	if ((status.trigger & VPAD_BUTTON_RIGHT)|| (status.trigger & VPAD_STICK_L_EMULATION_RIGHT))	{ playerMove = RIGHT; }
-	if ((status.trigger & VPAD_BUTTON_DOWN) || (status.trigger & VPAD_STICK_L_EMULATION_DOWN))	{ playerMove = DOWN; }
+	if ((status.hold & VPAD_BUTTON_UP)   || (status.hold & VPAD_STICK_L_EMULATION_UP))		{ playerMove = UP; }	// Player moves.
+	if ((status.hold & VPAD_BUTTON_LEFT) || (status.hold & VPAD_STICK_L_EMULATION_LEFT))	{ playerMove = LEFT; }
+	if ((status.hold & VPAD_BUTTON_RIGHT)|| (status.hold & VPAD_STICK_L_EMULATION_RIGHT))	{ playerMove = RIGHT; }
+	if ((status.hold & VPAD_BUTTON_DOWN) || (status.hold & VPAD_STICK_L_EMULATION_DOWN))	{ playerMove = DOWN; }
 	return;
 }
 
