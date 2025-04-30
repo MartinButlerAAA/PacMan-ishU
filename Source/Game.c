@@ -121,9 +121,10 @@ static void movePlayer()
 // Move the aliens on the game board.
 bool moveAliens()
 {
-	unsigned int z;		// Working index.
-	unsigned int rnd;	// Random number for direction.
-	bool gend = false;	// Return flag.
+	unsigned int z;				// Working index.
+	unsigned int rnd;			// Random number for direction.
+	unsigned int MAXRND = 20;	// Maximum for the random number to increase with screens.
+	bool gend = false;			// Return flag.
 	bool newDirection = false;
 
 	// Move all of the aliens being used for this game level.
@@ -177,14 +178,16 @@ bool moveAliens()
 		if (newDirection == true)		// Do the new direction processing if commanded.
 		{
 			// Make the aliens a bit slower to respond as more are added.
-			// Increasing the number of aliens makes the game more difficult, it is only playable if they are slow to react.
-			rnd = rand() % (3 + (Naliens * 2));
+			// Increasing the number of aliens makes the game more difficult, it is only playable if they are slower to react.
+			// However limit to MAXRND, otherwise aliens will get to the point that they do not move.
+			if (Naliens > 4) { rnd = rand() % MAXRND; }
+			else			 { rnd = rand() % (Naliens * 5); }
 
-			if ((rnd == 1) || (rnd == 2)) // One in two times pick a random direction to avoid getting stuck.
+			if (rnd == 1) // Pick a random direction to avoid getting stuck.
 			{
 				aliens[z].direction = rand() % 4 + 1;	// Pick a random direction.
 			}
-			else if (rnd == 3)			// One in four times pick a direction based on PacMan position.
+			else if (rnd == 2)			// Pick a direction based on PacMan position.
 			{
 				// If the alien is further from PacMan on the x axis, try left or right first.
 				if (abs(pacMan.x - aliens[z].x) > abs(pacMan.y - aliens[z].y))
@@ -203,7 +206,7 @@ bool moveAliens()
 					else if ((aliens[z].x < pacMan.x) && (store[aliens[z].y][aliens[z].x + 1] != BLOCK)) { aliens[z].direction = RIGHT; }
 				}
 			}
-			// One in four times the direction will be left unchanged.
+			// The direction will be left unchanged the rest of the time.
 			newDirection = false;	// Only do the logic when commanded.
 		}
 

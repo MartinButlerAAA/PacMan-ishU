@@ -13,7 +13,7 @@
 #include "Sounds.h"				// Headers for sounds via sndcore2.
 #include "Game.h"				// Header for the PacMan-ish game.
 
-#define MINDEL 17				// Minimum movement delay in ms (screen update of 60Hz).
+#define MINDEL 33				// Minimum movement delay in ms (screen update of 60Hz).
 
 #define XOFFSET 304				// Game screen X position (1280 - (21 blocks * 32 pixels)) / 21
 #define YOFFSET  56				// Game screen Y position  (720 - (19 blocks * 32 pixels)) /  2
@@ -25,8 +25,9 @@ void moveDelay()
 {
 	int delay;
 
-	delay = (8000 - getScore()) / 100;			// Decrease delay as the score increases.
-	if (delay <= MINDEL) delay = MINDEL;		// Limit to the minimum delay.
+	delay = (5200 - getScore()) / 100;			// Decrease delay as the score increases.
+	if (delay <= MINDEL) { delay = MINDEL; }	// Limit to the minimum delay.
+	if (delay >  52)	 { delay = MINDEL; }	// If score is now greater than 5200 also limit to MINDEL.
 	OSSleepTicks(OSMillisecondsToTicks(delay));	// Allow some time back for the OS in ms.
 }
 
