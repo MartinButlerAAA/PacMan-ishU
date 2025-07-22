@@ -1,6 +1,8 @@
 // Header for drawing functions.
 #pragma once
 
+#include <stdbool.h>	// To use bools
+
 // For this to work well for a project all icons, sprites need to be the same size. C does not like passing in arrays without known sizes.
 // For many games screens built from blocks of the same size works well. The following define the size of the sprites and therefore image arrays.
 #define SQX 32
@@ -16,3 +18,10 @@ bool drawImage(unsigned int ImageP[SQY][SQX], unsigned int xpos, unsigned int yp
 
 // Function to draw a straight line between start and end coordinates of the colour specified.
 bool drawLine(float x1, float y1, float x2, float y2, unsigned int colour);
+
+// Draw text at the position specified.
+bool drawText(char* dispString, unsigned int colour, unsigned int scale, unsigned int xpos, unsigned int ypos, unsigned int display);
+
+// Draw text centred on the position specified.
+bool drawTextCentred(char* dispString, unsigned int colour, unsigned int scale, unsigned int xpos, unsigned int ypos, unsigned int display);
+

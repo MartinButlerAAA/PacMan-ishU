@@ -37,22 +37,13 @@ void displayGamepad()
 	// Clear Game Pad screen to black.
 	OSScreenClearBufferEx(SCREEN_DRC, 0x00000000u);
 
-	char sscore[100] = "\0";	// Strings to display the current score and screen level.
-	char slevel[100] = "\0";
-
-	// Get the score and level for display.
-	sprintf(sscore, "Score: % 6i ", getScore());
-	sprintf(slevel, "Level: % 6i ", getScreen());
-
 	// Display information about the game on the game pad screen.
-	OSScreenPutFontEx(SCREEN_DRC, 3,  1, "PACMAN-ish");
-	OSScreenPutFontEx(SCREEN_DRC, 3,  3, "A game based on the legendary PacMan.");
-	OSScreenPutFontEx(SCREEN_DRC, 3,  5, "Use the left joycon or direction buttons to move PacMan.");
-	OSScreenPutFontEx(SCREEN_DRC, 3,  6, "Collect the dots to score.");
-	OSScreenPutFontEx(SCREEN_DRC, 3,  7, "The red and white balls send the baddies back to their pen.");
-	OSScreenPutFontEx(SCREEN_DRC, 3,  9, "Press ZL to start the game.");
-	OSScreenPutFontEx(SCREEN_DRC, 3, 12, sscore);
-	OSScreenPutFontEx(SCREEN_DRC, 3, 13, slevel);
+	drawText("PacMan-ish", 0xFEFEFE00u, 4, 10, 10, SCREEN_DRC);
+	drawText("Based on the legendary PacMan.", 0xFEFEFE00u, 3, 10, 60, SCREEN_DRC);
+	drawText("Use the left joycon or direction buttons to move.", 0xFEFEFE00u, 2, 10, 150, SCREEN_DRC);
+	drawText("Collect the dots to score.", 0xFEFEFE00u, 2, 10, 180, SCREEN_DRC);
+	drawText("The red and white balls send the baddies home.", 0xFEFEFE00u, 2, 10, 210, SCREEN_DRC);
+	drawText("Press ZL to start the game.", 0xFEFEFE00u, 2, 10, 270, SCREEN_DRC);
 
 	// Flip buffers to display the updates.
 	OSScreenFlipBuffersEx(SCREEN_DRC);
@@ -70,8 +61,18 @@ void displayScreen(int fineMove)
 	// The initial version of the game had aliens for baddies (hence the name), these are now ghosts as per PacMan.
 	gameObject_t alien;
 
+	char sscore[100] = "\0";	// Strings to display the current score and screen level.
+	char slevel[100] = "\0";
+
+	// Get the score and level for display.
+	sprintf(sscore, "Score:% 5i ", getScore());
+	sprintf(slevel, "Level:% 5i ", getScreen());
+
 	// Clear the TV to have a black background.
 	OSScreenClearBufferEx(SCREEN_TV, 0x00000000u);
+
+	drawText(sscore, 0xFEFEFE00u, 2, 1000, 100, SCREEN_TV);
+	drawText(slevel, 0xFEFEFE00u, 2, 1000, 130, SCREEN_TV);
 
 	// Draw the current state of the game board.
 	for (int y = 0; y < MAXY; y++)
@@ -122,15 +123,19 @@ void displayScreen(int fineMove)
 // If no new button has been pressed the move value is left unchanged. 
 void getVpad()
 {
-	VPADStatus status;	// Status returned for the game pad buttons.
+	VPADStatus status;		// Status returned for the game pad buttons.
+	VPADReadError error;	// Error from gamepad.
 
 	// Get the VPAD button last pressed.
-	VPADRead(VPAD_CHAN_0, &status, 1, NULL);
+	VPADRead(VPAD_CHAN_0, &status, 1, &error);	// Get the VPAD button last pressed.
 
-	if ((status.hold & VPAD_BUTTON_UP)   || (status.hold & VPAD_STICK_L_EMULATION_UP))		{ playerMove = UP; }	// Player moves.
-	if ((status.hold & VPAD_BUTTON_LEFT) || (status.hold & VPAD_STICK_L_EMULATION_LEFT))	{ playerMove = LEFT; }
-	if ((status.hold & VPAD_BUTTON_RIGHT)|| (status.hold & VPAD_STICK_L_EMULATION_RIGHT))	{ playerMove = RIGHT; }
-	if ((status.hold & VPAD_BUTTON_DOWN) || (status.hold & VPAD_STICK_L_EMULATION_DOWN))	{ playerMove = DOWN; }
+	if (error == VPAD_READ_SUCCESS)				// Only process buttons if no errors (e.g. gamepad lost power).
+	{
+		if ((status.hold & VPAD_BUTTON_UP)    || (status.hold & VPAD_STICK_L_EMULATION_UP))    { playerMove = UP; }		// Player moves.
+		if ((status.hold & VPAD_BUTTON_LEFT)  || (status.hold & VPAD_STICK_L_EMULATION_LEFT))  { playerMove = LEFT; }
+		if ((status.hold & VPAD_BUTTON_RIGHT) || (status.hold & VPAD_STICK_L_EMULATION_RIGHT)) { playerMove = RIGHT; }
+		if ((status.hold & VPAD_BUTTON_DOWN)  || (status.hold & VPAD_STICK_L_EMULATION_DOWN))  { playerMove = DOWN; }
+	}
 	return;
 }
 
@@ -170,7 +175,8 @@ void gameEnded()
 // Main program with setup, close down and the main game loop.
 int main(int argc, char** argv)
 {
-	VPADStatus status;	// Status returned for the game pad buttons to get ZL for game start.
+	VPADStatus status;			// Status returned for the game pad buttons to get ZL for game start.
+	VPADReadError error;		// Error from gamepad.
 	unsigned int gameState = 0;	// Game state waiting = 0, starting = 1, running = 2, ending = 3.
 	bool doNewScreen = false;	// Flag to add delay at end of screen.
 
@@ -189,8 +195,12 @@ int main(int argc, char** argv)
 	{
 		if (gameState == 0)			// waiting;
 		{
-			VPADRead(VPAD_CHAN_0, &status, 1, NULL);					// Get the VPAD button last pressed.
-			if  (status.trigger & VPAD_BUTTON_ZL) { gameState = 1; }	// change to starting.
+			VPADRead(VPAD_CHAN_0, &status, 1, &error);	// Get the VPAD button last pressed.
+
+			if (error == VPAD_READ_SUCCESS)				// Only process buttons if no errors (e.g. gamepad lost power).
+			{
+				if (status.trigger & VPAD_BUTTON_ZL) { gameState = 1; }	// change to starting.
+			}
 			displayGamepad();											// Show game instructions on the game-pad.
 			displayScreen(0);											// Show game screen while waiting.
 			moveDelay();
