@@ -37,8 +37,8 @@ DATA		:=	data
 INCLUDES	:=	source
 CONTENT		:=
 ICON		:=  meta/icon.png
-TV_SPLASH	:=
-DRC_SPLASH	:=
+TV_SPLASH	:=  meta/TV.png
+DRC_SPLASH	:=  meta/DRC.png
 
 #-------------------------------------------------------------------------------
 # options for code generation
